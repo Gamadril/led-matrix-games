@@ -1,0 +1,29 @@
+#!/bin/sh
+
+test -f /led-matrix-games/led_games || exit 0
+
+case "$1" in
+        start)
+                echo -n "Starting games server: "
+                start-stop-daemon -S -x /led-matrix-games/led_games -- --daemon
+                [ $? = 0 ] && echo "OK" || echo "FAIL"
+                ;;
+        stop)
+                echo -n "Stopping games server: "
+                start-stop-daemon -K -x /led-matrix-games/led_games
+                [ $? = 0 ] && echo "OK" || echo "FAIL"
+                ;;
+        restart)
+                $0 stop
+                sleep 2
+                $0 start
+                if [ "$?" != "0" ]; then
+                        exit 1
+                fi
+                ;;
+        *)
+                echo "Usage: /etc/init.d/S99games {start|stop|restart}"
+                exit 1
+esac
+
+exit 0

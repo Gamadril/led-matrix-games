@@ -1,0 +1,29 @@
+#!/bin/sh
+
+test -f /etc/hostapd.conf || exit 0
+
+case "$1" in
+        start)
+                echo -n "Starting HOSTAP server: "
+                start-stop-daemon -S -x /usr/sbin/hostapd -- -B /etc/hostapd.conf
+                [ $? = 0 ] && echo "OK" || echo "FAIL"
+                ;;
+        stop)
+                echo -n "Stopping HOSTAP server: dhcpd3"
+                start-stop-daemon -K -x /usr/sbin/hostap
+                [ $? = 0 ] && echo "OK" || echo "FAIL"
+                ;;
+        restart)
+                $0 stop
+                sleep 2
+                $0 start
+                if [ "$?" != "0" ]; then
+                        exit 1
+                fi
+                ;;
+        *)
+                echo "Usage: /etc/init.d/S90hostapd {start|stop|restart}"
+                exit 1
+esac
+
+exit 0

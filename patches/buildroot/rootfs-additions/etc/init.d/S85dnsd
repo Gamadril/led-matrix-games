@@ -1,0 +1,29 @@
+#!/bin/sh
+
+test -f /etc/dnsd.conf || exit 0
+
+case "$1" in
+        start)
+                echo -n "Starting DNS server: "
+                start-stop-daemon -S -x /usr/sbin/dnsd -- -d -c /etc/dnsd.conf
+                [ $? = 0 ] && echo "OK" || echo "FAIL"
+                ;;
+        stop)
+                echo -n "Stopping DNS server: "
+                start-stop-daemon -K -x /usr/sbin/dnsd
+                [ $? = 0 ] && echo "OK" || echo "FAIL"
+                ;;
+        restart)
+                $0 stop
+                sleep 2
+                $0 start
+                if [ "$?" != "0" ]; then
+                        exit 1
+                fi
+                ;;
+        *)
+                echo "Usage: /etc/init.d/S85dnsd {start|stop|restart}"
+                exit 1
+esac
+
+exit 0
