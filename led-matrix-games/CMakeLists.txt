@@ -36,7 +36,7 @@ include(ExternalProject)
 ExternalProject_Add(poco-lib
     PREFIX "${PROJECT_BINARY_DIR}/external/poco"
     GIT_REPOSITORY "https://github.com/pocoproject/poco.git"
-    GIT_TAG "poco-1.6.1"
+    GIT_TAG "poco-1.7.3"
 	INSTALL_DIR ${CMAKE_BINARY_DIR}/poco-lib
 	UPDATE_COMMAND ""
     CMAKE_ARGS -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS} ${TOOLCHAIN_ARG} -DENABLE_JSON=OFF -DENABLE_XML=OFF -DENABLE_MONGODB=OFF -DENABLE_NETSSL=OFF -DENABLE_CRYPTO=OFF -DENABLE_DATA=OFF -DENABLE_DATA_SQLITE=OFF -DENABLE_DATA_MYSQL=OFF -DENABLE_DATA_ODBC=OFF -DENABLE_ZIP=OFF  -DENABLE_PAGECOMPILER=OFF -DENABLE_PAGECOMPILER_FILE2PAGE=OFF -DCMAKE_BUILD_TYPE=MinSizeRel -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
@@ -61,8 +61,8 @@ link_directories(${INSTALL_DIR}/lib)
 
 ExternalProject_Add(lua-lib
      PREFIX "${PROJECT_BINARY_DIR}/external/lua"
-	 URL "http://www.lua.org/ftp/lua-5.3.1.tar.gz"
-	 URL_MD5 "797adacada8d85761c079390ff1d9961"
+	 URL "http://www.lua.org/ftp/lua-5.3.2.tar.gz"
+	 URL_MD5 "33278c2ab5ee3c1a875be8d55c1ca2a1"
 	 UPDATE_COMMAND ""
 	 PATCH_COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/patches/lua/CMakeLists.txt" <SOURCE_DIR>/CMakeLists.txt
 	 INSTALL_DIR ${CMAKE_BINARY_DIR}/lua-lib

@@ -1,7 +1,5 @@
 add_library(utils
-	HsvTransform.cpp
-	RgbChannelTransform.cpp
-)
+    HsvTransform.cpp)
 
 target_link_libraries(utils
     PocoFoundation

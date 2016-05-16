@@ -186,7 +186,7 @@ function init()
     local stats = { level = 1, lines = 0, score = 0 } -- Player stats.
 
     -- fall.interval is the number of seconds between downward piece movements.
-    local fall = { interval = 2.2 } -- A 'last_at' time is added to this table later.
+    local fall = { interval = 10.2 } -- A 'last_at' time is added to this table later.
 
     return stats, fall, next_piece
 end
@@ -198,12 +198,19 @@ function handle_input(stats, fall, next_piece)
 
     if game_state ~= 'playing' then return end -- Arrow keys only work if playing.
 
-    -- Handle the left, right, or up arrows.
-    local new_rot_num = (moving_piece.rot_num % 4) + 1 -- Map 1->2->3->4->1.
+    -- Handle buttons.
+    local new_rot_num_right = (moving_piece.rot_num % 4) + 1 -- Map 1->2->3->4->1.
+    local new_rot_num_left -- Map 1->4->3->2->1.
+    if moving_piece.rot_num == 1 then
+        new_rot_num_left = 4
+    else
+        new_rot_num_left = moving_piece.rot_num - 1
+    end
     local moves = {
         ['left'] = { x = moving_piece.x - 1 },
         ['right'] = { x = moving_piece.x + 1 },
-        ['up'] = { rot_num = new_rot_num }
+        ['a'] = { rot_num = new_rot_num_left },
+        ['b'] = { rot_num = new_rot_num_right }
     }
     if moves[key] then set_moving_piece_if_valid(moves[key]) end
 

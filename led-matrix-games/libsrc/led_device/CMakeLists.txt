@@ -4,7 +4,7 @@ add_library(led_device
         LedDeviceTpm2Serial.cpp
         LedRs232Device.cpp
         TcpSocketDevice.cpp
-        )
+        LedDevice.cpp)
 
 target_link_libraries(led_device
         utils

@@ -75,6 +75,14 @@ protected:
             }
             std::cout << "Led device " << view->getString("type") << " created" << std::endl;
 
+            // get generic settings
+            view = config().createView("settings");
+            uint8_t brightness = (uint8_t) view->getUInt("brightness", 60);
+            if (brightness > 100) {
+                brightness = 100;
+            }
+            _ledDevice->setBrightness(brightness);
+
             // Create game engine
             view = config().createView("games");
             _engine = new GameEngine(DISPLAY_WIDTH, DISPLAY_HEIGHT);
