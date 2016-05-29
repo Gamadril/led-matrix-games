@@ -16,6 +16,7 @@ target_link_libraries(led_games
 		game_engine
 		led_device
 		control_server
+		control
 )
 
 target_link_libraries(led_games ${CROSS_LIBS})

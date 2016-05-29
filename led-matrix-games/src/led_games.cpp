@@ -12,6 +12,7 @@
 #include "Poco/Delegate.h"
 
 #include "control_server/ControlServer.h"
+#include "control/Gamepad.h"
 #include "game_engine/GameEngine.h"
 #include "led_device/LedDeviceFactory.h"
 #include "Display.h"
@@ -102,6 +103,13 @@ protected:
             _controlServer = new ControlServer(port);
             _controlServer->controlEvent += Poco::delegate(this, &LedGamesService::onControl);
             std::cout << "Control server created and started on port " << _controlServer->getPort() << std::endl;
+
+            // Create joystick listener
+            view = config().createView("gamepad");
+            std::string device = view->getString("device", "/dev/input/js0");
+            Gamepad gamepad(device);
+            gamepad.controlEvent += Poco::delegate(this, &LedGamesService::onControl);
+            Poco::ThreadPool::defaultPool().start(gamepad);
 
             // wait for CTRL-C or kill
             waitForTerminationRequest();

@@ -1,4 +1,4 @@
-local colors = {[-1] = {255,255,255}, [0] = {0,0,0}, { 255, 255, 255 }, { 0, 255, 0 }, { 0, 255, 255 }, { 255, 0, 0 }, { 255, 255, 0 }, { 255, 0, 255 }, {255,128,0}}
+local colors = { [-1] = { 255, 255, 255 }, [0] = { 0, 0, 0 }, { 255, 255, 255 }, { 0, 255, 0 }, { 0, 255, 255 }, { 255, 0, 0 }, { 255, 255, 0 }, { 255, 0, 255 }, { 255, 128, 0 } }
 
 local screen = {}
 local game_state = 'playing' -- Could also be 'paused' or 'over'.
@@ -8,6 +8,8 @@ local board_size = { x = 10, y = 20 }
 local board = {} -- board[x][y] = shape_num; 0=empty; -1=border.
 local val = { border = -1, empty = 0 } -- Shorthand to avoid magic numbers.
 local moving_piece = {} -- Keys will be: shape, rot_num, x, y.
+
+local showFallingShdow = false
 
 -- Set up one orientation of each shape.
 
@@ -186,7 +188,7 @@ function init()
     local stats = { level = 1, lines = 0, score = 0 } -- Player stats.
 
     -- fall.interval is the number of seconds between downward piece movements.
-    local fall = { interval = 10.2 } -- A 'last_at' time is added to this table later.
+    local fall = { interval = 1.2 } -- A 'last_at' time is added to this table later.
 
     return stats, fall, next_piece
 end
@@ -296,9 +298,11 @@ function lower_piece_at_right_time(stats, fall, next_piece)
 
     --    local timeval = posix.gettimeofday()
     --    local timestamp = timeval.sec + timeval.usec * 1e-6
-    local timestamp = os.clock() * 1000
+    --local timestamp = os.clock() * 1000
+    local timestamp = os.clock()
     if fall.last_at == nil then fall.last_at = timestamp end -- Happens at startup.
 
+    -- print(timestamp .. ' - ' .. fall.last_at .. ' < ' .. fall.interval)
     -- Do nothing until it's been fall.interval seconds since the last fall.
     if timestamp - fall.last_at < fall.interval then return end
 
@@ -310,12 +314,12 @@ end
 
 
 function draw_point(x, y, color, y_offset)
-    if (type(color) == "table") then
-        screen[y + y_offset][x+1] = color
-    else
-        print('Passed color parameter is not a table')
-        print(debug.traceback())
-    end
+    --    if (type(color) == "table") then
+    screen[y + y_offset][x + 1] = color
+    --    else
+    --        print('Passed color parameter is not a table')
+    --        print(debug.traceback())
+    --    end
 end
 
 function print_r(t)
@@ -356,28 +360,28 @@ end
 function call_fn_for_xy_in_numbers(number, callback)
     local digits_count = #tostring(number)
     for d = 0, digits_count - 1 do
-        local c = tostring(number):sub(d+1,d+1)
+        local c = tostring(number):sub(d + 1, d + 1)
         local l = numbers[tonumber(c)]
         for y, col in ipairs(l) do
             for x, val in ipairs(col) do
-                callback(d*4 + x, y, val)
+                callback(d * 4 + x, y, val)
             end
         end
     end
 end
 
 function draw_level(x, y, level)
-    local color = {255,255,255}
+    local color = { 255, 255, 255 }
     local letter_width = 4
-    call_fn_for_xy_in_letter('L', function(lx,ly)
+    call_fn_for_xy_in_letter('L', function(lx, ly)
         screen[y + ly][x + lx] = color
     end)
-    call_fn_for_xy_in_letter('V', function(lx,ly)
-            screen[y + ly][x + letter_width + lx] = color
-        end)
-        call_fn_for_xy_in_letter('L', function(lx,ly)
-                screen[y + ly][x  + 2*letter_width + lx] = color
-            end)
+    call_fn_for_xy_in_letter('V', function(lx, ly)
+        screen[y + ly][x + letter_width + lx] = color
+    end)
+    call_fn_for_xy_in_letter('L', function(lx, ly)
+        screen[y + ly][x + 2 * letter_width + lx] = color
+    end)
 end
 
 function draw_screen(stats, next_piece)
@@ -390,49 +394,42 @@ function draw_screen(stats, next_piece)
         end
     end
 
+    if showFallingShdow then
+        -- Fill the space under the piece for better orientation
+        call_fn_for_xy_in_piece(moving_piece, function(px, py, color)
+            --print("px: " .. px .. ", py: " .. py .. ", color: " .. color[1] .. "," .. color[2] .. "," .. color[3])
+            for y = py + 1, board_size.y do
+                local dot = board[px][y]
+                --print('x: ' .. px .. ' ,y: ' .. y .. ', dot: ' .. dot)
+                if dot == 0 then
+                    screen[y + offsets.board_y][px + 1] = { math.floor(color[1] / 10), math.floor(color[2] / 10), math.floor(color[3] / 10) }
+                else
+                    break
+                end
+            end
+        end, colors[moving_piece.shape], offsets.board_y);
+    end
+
+
     call_fn_for_xy_in_piece(moving_piece, draw_point, colors[moving_piece.shape], offsets.board_y)
 
---[[
-    -- Fill the space under the piece for better orientation
-    call_fn_for_xy_in_piece(moving_piece, function(px, py, color)
-        --print("px: " .. px .. ", py: " .. py .. ", color: " .. color[1] .. "," .. color[2] .. "," .. color[3])
-        for y = py + 1, board_size.y do
-            local dot = board[px][y]
-            --print('x: ' .. px .. ' ,y: ' .. y .. ', dot: ' .. dot)
-            if dot == 0 then
-                screen[y + offsets.board_y][px][1] = math.floor(color[1] / 5)
-                screen[y + offsets.board_y][px][2] = math.floor(color[2] / 5)
-                screen[y + offsets.board_y][px][3] = math.floor(color[3] / 5)
-            else
-                break
-            end
-        end
-    end, colors[moving_piece.shape], offsets.board_y);
---]]
+    -- Clear place of next piece
+    local next_y = offsets.board_y + 3
+    local next_x = offsets.board_x + board_size.x + 2
 
-  -- Clear place of next piece
-  local next_y = offsets.board_y + 3
-  local next_x = offsets.board_x + board_size.x + 2
+    for ny = next_y + 1, next_y + 4 do
+        screen[ny][next_x + 2] = { 0, 0, 0 }
+        screen[ny][next_x + 3] = { 0, 0, 0 }
+    end
 
-  for ny = next_y + 1, next_y + 4 do
-    screen[ny][next_x + 2] = {0,0,0}
-    screen[ny][next_x + 3] = {0,0,0}
-  end
-
-  -- Draw the next piece.
-  local piece = {shape = next_piece.shape, rot_num = 2, x = next_x, y = next_y}
-  call_fn_for_xy_in_piece(piece, draw_point, colors[piece.shape], offsets.board_y)
+    -- Draw the next piece.
+    local piece = { shape = next_piece.shape, rot_num = 2, x = next_x, y = next_y }
+    call_fn_for_xy_in_piece(piece, draw_point, colors[piece.shape], offsets.board_y)
 
 
-  --stdscr:mvaddstr(11, x_labels, 'Lines ' .. stats.lines)
-  --stdscr:mvaddstr(13, x_labels, 'Score ' .. stats.score)
-  -- draw current level
-  call_fn_for_xy_in_numbers(stats.level, function(lx,ly,val)
-          screen[10 + ly][lx + board_size.x + 3] = colors[val]
-  end)
-
-  call_fn_for_xy_in_numbers(stats.score, function(lx,ly,val)
-            screen[board_size.y + 5 + ly][2 + lx] = colors[val]
+    -- draw current score
+    call_fn_for_xy_in_numbers(stats.score, function(lx, ly, val)
+        screen[board_size.y + 5 + ly][2 + lx] = colors[val]
     end)
 
     engine:setScreen(screen)
