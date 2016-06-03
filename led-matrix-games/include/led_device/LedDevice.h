@@ -45,6 +45,8 @@ public:
 
     void setBrightness(uint8_t brightness);
 
+    uint8_t getBrightness();
+
     void setColorOrder(DeviceColorOrder colorOrder);
 
     void setLedOrigin(DeviceLedOrigin origin);

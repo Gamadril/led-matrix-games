@@ -13,6 +13,10 @@ void LedDevice::setBrightness(uint8_t brightness) {
     _brightness = brightness;
 }
 
+uint8_t LedDevice::getBrightness() {
+    return _brightness;
+}
+
 void LedDevice::setColorOrder(DeviceColorOrder colorOrder) {
     _colorOrder = colorOrder;
 }
