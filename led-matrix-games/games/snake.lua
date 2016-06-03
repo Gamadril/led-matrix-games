@@ -210,9 +210,19 @@ end
 
 function handle_input()
     local key = engine:getKey() -- Nonblocking; returns nil if no key was pressed.
-    print(key)
 
-    if key == nil or game_state ~= 'playing' then return end
+    if key == nil then return end
+
+    if key == "b" then
+        if game_state == 'playing' then
+            game_state = 'paused'
+        elseif game_state == 'paused' then
+            game_state = 'playing'
+        end
+        do return end
+    end
+
+    if game_state ~= 'playing' then return end
 
     if key == "right" and direction ~= "left" then
         direction = "right"
@@ -266,7 +276,6 @@ end
 
 function main()
     init()
-    draw_screen()
 
     while true do -- main loop.
     if game_state == 'over' then
@@ -275,14 +284,22 @@ function main()
             init()
             game_state = 'playing'
         end
+    elseif game_state == 'paused' then
+        handle_input()
+        local timestamp = os.clock()
+        if timestamp - lastTimestamp > 0.5 then
+            engine:clearScreen()
+            lastTimestamp = timestamp
+        else
+            draw_screen()
+        end
     else
         handle_input()
-
         local timestamp = os.clock()
         if timestamp - lastTimestamp > 0.2 then
             if not move() then game_state = 'over' end
-            draw_screen();
             lastTimestamp = timestamp
+            draw_screen()
         end
     end
     engine:sleep(50);

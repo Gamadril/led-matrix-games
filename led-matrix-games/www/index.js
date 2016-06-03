@@ -1,4 +1,4 @@
-var ws, i, buttons, address = 'ws://192.168.0.1:37890';
+var ws, i, buttons, address = 'ws://172.16.229.130:37890';
 navigator.vibrate = navigator.vibrate ||
                   navigator.webkitVibrate ||
                   navigator.mozVibrate || 
@@ -17,7 +17,7 @@ function updateButtons() {
         buttonSize = window.innerHeight / 5;
     }
 
-    buttons = document.querySelectorAll('.round-button');
+    buttons = document.querySelectorAll('.button');
     for (i = 0; i < buttons.length; i++) {
         buttons[i].style.width = buttonSize + 'px';
         buttons[i].style.height = buttonSize + 'px';
@@ -48,6 +48,14 @@ function updateButtons() {
     // B button
     buttons[5].style.right = (offset + 0.5 * buttonSize) + 'px';
     buttons[5].style.top = (window.innerHeight / 2 - buttonSize / 2) + 'px';
+
+    // + button
+    buttons[6].style.right = (1.2 * buttonSize) + 'px';
+    buttons[6].style.bottom = '0';
+
+    // - button
+    buttons[7].style.right = '0';
+    buttons[7].style.bottom = '0';
 }
 
 function vibrate() {
@@ -92,7 +100,7 @@ function sendKey(key) {
     }
 }
 
-buttons = document.querySelectorAll('.round-button');
+buttons = document.querySelectorAll('.button');
 for (i = 0; i < buttons.length; i++) {
     buttons[i].addEventListener('click', function (event) {
 		vibrate();
@@ -103,7 +111,7 @@ for (i = 0; i < buttons.length; i++) {
 		sendKey(event.target.id);
 		event.stopPropagation();
 		event.preventDefault();
-    }, false);
+    });
 }
 
 document.addEventListener('keydown', function (e) {

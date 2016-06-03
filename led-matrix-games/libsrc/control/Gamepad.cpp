@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <linux/joystick.h>
+#include <utils/DelegateArgs.h>
 
 #include "control/Gamepad.h"
 
@@ -66,10 +67,16 @@ void Gamepad::run() {
                 case JS_EVENT_BUTTON:
                     if (jse.value == 1) {
                         ControlArgs args;
-                        if (jse.number % 2 == 0) {
-                            args.key = "a";
+                        if (jse.number == 4) {
+                            args.key = "bright_minus";
+                        } else if (jse.number == 5) {
+                            args.key = "bright_plus";
                         } else {
-                            args.key = "b";
+                            if (jse.number % 2 == 0) {
+                                args.key = "a";
+                            } else {
+                                args.key = "b";
+                            }
                         }
                         controlEvent.notifyAsync(this, args);
                     }

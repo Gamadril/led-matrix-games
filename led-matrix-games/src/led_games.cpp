@@ -78,15 +78,17 @@ protected:
 
             // get generic settings
             view = config().createView("settings");
-            uint8_t brightness = (uint8_t) view->getUInt("brightness", 60);
+            uint8_t brightness = (uint8_t) view->getUInt("brightness", 40);
             if (brightness > 100) {
                 brightness = 100;
             }
+            uint8_t screenWidth = (uint8_t) view->getUInt("screen_width", 16);
+            uint8_t screenHeight = (uint8_t) view->getUInt("screen_height", 32);
             _ledDevice->setBrightness(brightness);
 
             // Create game engine
             view = config().createView("games");
-            _engine = new GameEngine(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            _engine = new GameEngine(screenWidth, screenHeight);
             _engine->setScreenEvent += Poco::delegate(this, &LedGamesService::onNewScreen);
             std::string gamePath = view->getString("path", "games") + Poco::Path::separator() + view->getString("start", "demo") + ".lua";
             Poco::File gameFile(gamePath);
@@ -107,18 +109,20 @@ protected:
             // Create joystick listener
             view = config().createView("gamepad");
             std::string device = view->getString("device", "/dev/input/js0");
-            Gamepad gamepad(device);
-            gamepad.controlEvent += Poco::delegate(this, &LedGamesService::onControl);
-            Poco::ThreadPool::defaultPool().start(gamepad);
+            _gamepad = new Gamepad(device);
+            _gamepad->controlEvent += Poco::delegate(this, &LedGamesService::onControl);
+            Poco::ThreadPool::defaultPool().start(*_gamepad);
 
             // wait for CTRL-C or kill
             waitForTerminationRequest();
 
             _engine->setScreenEvent -= Poco::delegate(this, &LedGamesService::onNewScreen);
             _controlServer->controlEvent -= Poco::delegate(this, &LedGamesService::onControl);
+            _gamepad->controlEvent -= Poco::delegate(this, &LedGamesService::onControl);
             delete _engine;
             delete _controlServer;
             delete _ledDevice;
+            delete _gamepad;
         }
         return ExitCode::EXIT_OK;
     }
@@ -128,7 +132,17 @@ protected:
     }
 
     void onControl(const void *sender, ControlArgs &args) {
-        _engine->setPressedKey(args.key);
+        if (args.key == "bright_minus") {
+            uint8_t brightness = _ledDevice->getBrightness();
+            brightness = (uint8_t)(brightness < 5 ? 0 : brightness - 5);
+            _ledDevice->setBrightness(brightness);
+        } else if (args.key == "bright_plus") {
+            uint8_t brightness = _ledDevice->getBrightness();
+            brightness = (uint8_t)(brightness > 95 ? 100 : brightness + 5);
+            _ledDevice->setBrightness(brightness);
+        } else {
+            _engine->setPressedKey(args.key);
+        }
     }
 
 private:
@@ -136,6 +150,7 @@ private:
     ControlServer *_controlServer;
     GameEngine *_engine;
     LedDevice *_ledDevice;
+    Gamepad *_gamepad;
 };
 
 POCO_SERVER_MAIN(LedGamesService)

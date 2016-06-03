@@ -21,5 +21,5 @@ private:
 
 private:
     Poco::Net::WebSocket *_socket;
-    char _receiveBuffer[10];
+    char _receiveBuffer[20];
 };
