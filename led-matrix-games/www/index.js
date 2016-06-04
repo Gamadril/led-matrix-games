@@ -1,4 +1,4 @@
-var ws, i, buttons, address = 'ws://172.16.229.130:37890';
+var ws, i, buttons, address = 'ws://192.168.0.1:37890';
 navigator.vibrate = navigator.vibrate ||
                   navigator.webkitVibrate ||
                   navigator.mozVibrate || 

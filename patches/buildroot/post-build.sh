@@ -28,4 +28,5 @@ echo '/dev/mmcblk0p1 /boot vfat defaults 0 0' >> $TARGETDIR/etc/fstab
 echo "Building game engine"
 cd $TARGETDIR/../../../../led-matrix-games
 ./build.sh "rpi"
-unzip build/led-matrix-games.zip -d $TARGETDIR
+unzip -o build/led-matrix-games.zip -d $TARGETDIR
+mv -f $TARGETDIR/led-matrix-games/www/* $TARGETDIR/var/www/data/
