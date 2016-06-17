@@ -1,124 +1,10 @@
-local colors = { border = { 255, 255, 255 }, empty = { 0, 0, 0 }, food = { 255, 0, 0 }, body = { 0, 255, 0 }, head = { 255, 255, 0 } }
-local game_state = 'playing' -- 'paused' or 'over'
-local screen = {}
-local board_size = { x = 14, y = 20 }
-local snake
-local lastTimestamp
+local tools = require("lib.tools")
 
-local Food = {}
+local snake = {}
+snake.colors = { border = { 255, 255, 255 }, empty = { 0, 0, 0 }, food = { 255, 0, 0 }, body = { 0, 255, 0 }, head = { 255, 255, 0 } }
+snake.board_size = { x = 14, y = 20 }
 
-local direction
-local score = 0
-
-local numbers = {
-    [0] = {
-        { 1, 1, 1 },
-        { 1, 0, 1 },
-        { 1, 0, 1 },
-        { 1, 0, 1 },
-        { 1, 1, 1 }
-    },
-    {
-        { 0, 1, 0 },
-        { 1, 1, 0 },
-        { 0, 1, 0 },
-        { 0, 1, 0 },
-        { 1, 1, 1 }
-    },
-    {
-        { 1, 1, 1 },
-        { 0, 0, 1 },
-        { 1, 1, 1 },
-        { 1, 0, 0 },
-        { 1, 1, 1 }
-    },
-    {
-        { 1, 1, 1 },
-        { 0, 0, 1 },
-        { 0, 1, 1 },
-        { 0, 0, 1 },
-        { 1, 1, 1 }
-    },
-    {
-        { 1, 0, 1 },
-        { 1, 0, 1 },
-        { 1, 1, 1 },
-        { 0, 0, 1 },
-        { 0, 0, 1 }
-    },
-    {
-        { 1, 1, 1 },
-        { 1, 0, 0 },
-        { 1, 1, 1 },
-        { 0, 0, 1 },
-        { 1, 1, 1 }
-    },
-    {
-        { 1, 1, 1 },
-        { 1, 0, 0 },
-        { 1, 1, 1 },
-        { 1, 0, 1 },
-        { 1, 1, 1 }
-    },
-    {
-        { 1, 1, 1 },
-        { 0, 0, 1 },
-        { 0, 1, 0 },
-        { 0, 1, 0 },
-        { 0, 1, 0 }
-    },
-    {
-        { 1, 1, 1 },
-        { 1, 0, 1 },
-        { 1, 1, 1 },
-        { 1, 0, 1 },
-        { 1, 1, 1 }
-    },
-    {
-        { 1, 1, 1 },
-        { 1, 0, 1 },
-        { 1, 1, 1 },
-        { 0, 0, 1 },
-        { 1, 1, 1 }
-    }
-}
-
-function print_r(t)
-    local print_r_cache = {}
-    local function sub_print_r(t, indent)
-        if (print_r_cache[tostring(t)]) then
-            print(indent .. "*" .. tostring(t))
-        else
-            print_r_cache[tostring(t)] = true
-            if (type(t) == "table") then
-                for pos, val in pairs(t) do
-                    if (type(val) == "table") then
-                        print(indent .. "[" .. pos .. "] => " .. tostring(t) .. " {")
-                        sub_print_r(val, indent .. string.rep(" ", string.len(pos) + 8))
-                        print(indent .. string.rep(" ", string.len(pos) + 6) .. "}")
-                    elseif (type(val) == "string") then
-                        print(indent .. "[" .. pos .. '] => "' .. val .. '"')
-                    else
-                        print(indent .. "[" .. pos .. "] => " .. tostring(val))
-                    end
-                end
-            else
-                print(indent .. tostring(t))
-            end
-        end
-    end
-
-    if (type(t) == "table") then
-        print(tostring(t) .. " {")
-        sub_print_r(t, "  ")
-        print("}")
-    else
-        sub_print_r(t, "  ")
-    end
-    print()
-end
-
-function contains_coordinate(table, coordinate)
+local function contains_coordinate(table, coordinate)
     for _, value in ipairs(table) do
         if coordinate.x == value.x and coordinate.y == value.y then
             return true
@@ -127,53 +13,40 @@ function contains_coordinate(table, coordinate)
     return false
 end
 
-function call_fn_for_xy_in_numbers(number, callback)
-    local digits_count = #tostring(number)
-    for d = 0, digits_count - 1 do
-        local c = tostring(number):sub(d + 1, d + 1)
-        local l = numbers[tonumber(c)]
-        for y, col in ipairs(l) do
-            for x, val in ipairs(col) do
-                callback(d * 4 + x, y, val)
-            end
-        end
-    end
-end
-
-
 local function create_food()
-    Food.x, Food.y = math.random(board_size.x), math.random(board_size.y)
-    while contains_coordinate(snake, Food) do
-        Food.x, Food.y = math.random(board_size.x), math.random(board_size.y)
+    snake.food.x, snake.food.y = math.random(snake.board_size.x), math.random(snake.board_size.y)
+    while contains_coordinate(snake.snake, snake.food) do
+        snake.food.x, snake.food.y = math.random(snake.board_size.x), math.random(snake.board_size.y)
     end
 end
 
 local function eat_food()
     create_food()
-    score = score + 1
+    snake.score = snake.score + 1
+    if snake.score % 10 == 0 then snake.speed = snake.speed + 1 end
 end
 
 local function check_collision(coordinate)
-    if coordinate.x == 0 or coordinate.x == board_size.x + 1 then
+    if coordinate.x == 0 or coordinate.x == snake.board_size.x + 1 then
         return true
-    elseif coordinate.y == 0 or coordinate.y == board_size.y + 1 then
+    elseif coordinate.y == 0 or coordinate.y == snake.board_size.y + 1 then
         return true
-    elseif contains_coordinate(snake, coordinate) then
+    elseif contains_coordinate(snake.snake, coordinate) then
         return true
     end
     return false
 end
 
 local function move()
-    local head = snake[1]
+    local head = snake.snake[1]
     local next
-    if direction == "right" then
+    if snake.direction == "right" then
         next = { x = head.x + 1, y = head.y }
-    elseif direction == "left" then
+    elseif snake.direction == "left" then
         next = { x = head.x - 1, y = head.y }
-    elseif direction == "up" then
+    elseif snake.direction == "up" then
         next = { x = head.x, y = head.y - 1 }
-    elseif direction == "down" then
+    elseif snake.direction == "down" then
         next = { x = head.x, y = head.y + 1 }
     end
 
@@ -181,124 +54,123 @@ local function move()
         return false
     end
 
-    if Food.x == next.x and Food.y == next.y then
+    if snake.food.x == next.x and snake.food.y == next.y then
         eat_food()
     else
-        table.remove(snake)
+        table.remove(snake.snake)
     end
 
-    table.insert(snake, 1, next)
+    table.insert(snake.snake, 1, next)
 
     return true
 end
 
-function init()
-    -- init screen
-    for y = 1, engine.screenHeight do
-        screen[y] = {}
-        for x = 1, engine.screenWidth do
-            screen[y][x] = colors.empty
-        end
-    end
+local function init()
+    tools.initScreen()
 
-    score = 0
-    direction = 'right'
-    snake = { { x = 3, y = 1 }, { x = 2, y = 1 }, { x = 1, y = 1 } }
+    snake.snake = { { x = 3, y = 1 }, { x = 2, y = 1 }, { x = 1, y = 1 } }
+    snake.game_state = 'playing' -- 'paused' or 'over'
+    snake.lastTimestamp = engine:time()
+    snake.speed = 0
+    snake.food = {}
     create_food()
-    lastTimestamp = os.clock()
+    snake.direction = "right"
+    snake.score = 0
+    snake.exit = false
 end
 
-function handle_input()
+local function handle_input()
     local key = engine:getKey() -- Nonblocking; returns nil if no key was pressed.
 
     if key == nil then return end
 
+    if key == "select" then
+        snake.exit = true
+        do return end
+    end
+
     if key == "b" then
-        if game_state == 'playing' then
-            game_state = 'paused'
-        elseif game_state == 'paused' then
-            game_state = 'playing'
+        if snake.game_state == 'playing' then
+            snake.game_state = 'paused'
+        elseif snake.game_state == 'paused' then
+            snake.game_state = 'playing'
         end
         do return end
     end
 
-    if game_state ~= 'playing' then return end
+    if snake.game_state ~= 'playing' then return end
 
-    if key == "right" and direction ~= "left" then
-        direction = "right"
+    if key == "right" and snake.direction ~= "left" then
+        snake.direction = "right"
     end
-    if key == "left" and direction ~= "right" then
-        direction = "left"
+    if key == "left" and snake.direction ~= "right" then
+        snake.direction = "left"
     end
-    if key == "up" and direction ~= "down" then
-        direction = "up"
+    if key == "up" and snake.direction ~= "down" then
+        snake.direction = "up"
     end
-    if key == "down" and direction ~= "up" then
-        direction = "down"
+    if key == "down" and snake.direction ~= "up" then
+        snake.direction = "down"
     end
 end
 
-function draw_screen()
-    -- clear the board and draw the board's border
-    for x = 0, board_size.x + 1 do
-        for y = 0, board_size.y + 1 do
-            if x == 0 or y == 0 or x == board_size.x + 1 or y == board_size.y + 1 then
-                screen[y + 1][x + 1] = colors.border
-            else
-                screen[y + 1][x + 1] = colors.empty
+local function draw_screen()
+    tools.clearScreen()
+
+    -- draw board
+    for x = 0, snake.board_size.x + 1 do
+        for y = 0, snake.board_size.y + 1 do
+            if x == 0 or y == 0 or x == snake.board_size.x + 1 or y == snake.board_size.y + 1 then
+                tools.setScreenDot(x + 1, y + 1, snake.colors.border)
             end
         end
     end
 
     -- draw the snake
-    for index, value in ipairs(snake) do
+    for index, value in ipairs(snake.snake) do
         if index == 1 then
-            screen[value.y + 1][value.x + 1] = colors.head
+            tools.setScreenDot(value.x + 1, value.y + 1, snake.colors.head)
         else
-            screen[value.y + 1][value.x + 1] = colors.body
+            tools.setScreenDot(value.x + 1, value.y + 1, snake.colors.body)
         end
     end
 
     -- draw food
-    screen[Food.y + 1][Food.x + 1] = colors.food
+    tools.setScreenDot(snake.food.x + 1, snake.food.y + 1, snake.colors.food)
 
     -- draw score
-    call_fn_for_xy_in_numbers(score, function(lx, ly, val)
-        if val > 0 then
-            screen[board_size.y + 5 + ly][2 + lx] = colors.body
-        else
-            screen[board_size.y + 5 + ly][2 + lx] = colors.empty
-        end
-    end)
+    tools.print(snake.score, 2, snake.board_size.y + 5, snake.colors.body);
 
-    engine:setScreen(screen)
+    tools.updateScreen()
 end
 
-function main()
+function snake.run()
     init()
-
-    while true do -- main loop.
-    if game_state == 'over' then
+    while not snake.exit do -- main loop.
+    if snake.game_state == 'over' then
         local key = engine:getKey()
         if key == "a" then
             init()
-            game_state = 'playing'
+            snake.game_state = 'playing'
+        elseif key == "select" then
+            break
         end
-    elseif game_state == 'paused' then
+    elseif snake.game_state == 'paused' then
         handle_input()
-        local timestamp = os.clock()
-        if timestamp - lastTimestamp > 0.5 then
-            engine:clearScreen()
-            lastTimestamp = timestamp
+        local timestamp = engine:time()
+        if timestamp - snake.lastTimestamp > 500 then
+            tools.clearScreen()
+            tools.updateScreen()
+            snake.lastTimestamp = timestamp
         else
             draw_screen()
         end
     else
         handle_input()
-        local timestamp = os.clock()
-        if timestamp - lastTimestamp > 0.2 then
-            if not move() then game_state = 'over' end
-            lastTimestamp = timestamp
+        local timestamp = engine:time()
+        if timestamp - snake.lastTimestamp > (450 - snake.speed * 50) then
+            if not move() then snake.game_state = 'over' end
+            snake.lastTimestamp = timestamp
             draw_screen()
         end
     end
@@ -306,4 +178,4 @@ function main()
     end
 end
 
-main()
+return snake

@@ -68,8 +68,8 @@ link_directories(${INSTALL_DIR}/lib)
 
 ExternalProject_Add(lua-lib
      PREFIX "${PROJECT_BINARY_DIR}/external/lua"
-	 URL "http://www.lua.org/ftp/lua-5.3.2.tar.gz"
-	 URL_MD5 "33278c2ab5ee3c1a875be8d55c1ca2a1"
+	 URL "http://www.lua.org/ftp/lua-5.3.3.tar.gz"
+	 URL_MD5 "703f75caa4fdf4a911c1a72e67a27498"
 	 UPDATE_COMMAND ""
 	 PATCH_COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/patches/lua/CMakeLists.txt" <SOURCE_DIR>/CMakeLists.txt
 	 INSTALL_DIR ${CMAKE_BINARY_DIR}/lua-lib

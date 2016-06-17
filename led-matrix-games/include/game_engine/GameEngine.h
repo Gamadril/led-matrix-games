@@ -25,7 +25,6 @@ public:
 protected:
     void onGameExit(const void *sender);
     void onUpdateScreen(const void *sender);
-    void onClearScreen(const void *sender);
 
 private:
     Game *_game;

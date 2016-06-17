@@ -15,7 +15,6 @@
 #include "control/Gamepad.h"
 #include "game_engine/GameEngine.h"
 #include "led_device/LedDeviceFactory.h"
-#include "Display.h"
 
 class LedGamesService : public Poco::Util::ServerApplication {
 public:

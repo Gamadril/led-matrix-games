@@ -1,8 +1,6 @@
 #pragma once
 
 #include <vector>
-#include <iostream>
-
 #include "ColorRgb.h"
 
 class Screen {
@@ -11,21 +9,16 @@ public:
         this->width = width;
         this->height = height;
 
-        _data = new ColorRgb *[height];
+        _data.resize(height);
         for (int i = 0; i < height; i++) {
-            _data[i] = new ColorRgb[width];
+            _data[i].resize(width);
+            for (int j = 0; j < width; j++) {
+                _data[i][j] = {};
+            }
         }
     }
 
     ~Screen() {
-        for (int i = 0; i < height; i++) {
-            delete[] _data[i];
-        }
-        delete[] _data;
-
-        width = 0;
-        height = 0;
-        _data = NULL;
     }
 
     ColorRgb get(const int &x, const int &y) const {
@@ -33,22 +26,29 @@ public:
     }
 
     void set(const int &x, const int &y, const ColorRgb &color) {
-        _data[y][x] = color;
+        _data[y][x].red = color.red;
+        _data[y][x].green = color.green;
+        _data[y][x].blue = color.blue;
     }
 
-    void clear() {
-        for (int i = 0; i < height; ++i) {
-            for (int j = 0; j < width; ++j) {
-                _data[i][j].blue = 0;
-                _data[i][j].red = 0;
-                _data[i][j].green = 0;
+    std::string toString() {
+        std::string result = "";
+        for (int i = 0; i < height; i++) {
+            for (int j = 0; j < width; j++) {
+                if (_data[i][j].red > 0 || _data[i][j].green > 0 || _data[i][j].blue > 0) {
+                    result.append("+");
+                } else {
+                    result.append(" ");
+                }
             }
+            result.append("\n");
         }
+        return result;
     }
 
-    int width;
-    int height;
+    uint8_t width;
+    uint8_t height;
 
 private:
-    ColorRgb **_data;
+    std::vector<std::vector<ColorRgb>> _data;
 };

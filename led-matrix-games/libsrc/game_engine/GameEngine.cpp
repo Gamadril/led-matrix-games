@@ -16,7 +16,6 @@ GameEngine::GameEngine(const uint32_t screenWidth, const uint32_t screenHeight) 
 GameEngine::~GameEngine() {
     _game->abort();
     _game->updateScreenEvent -= Poco::delegate(this, &GameEngine::onUpdateScreen);
-    _game->clearScreenEvent -= Poco::delegate(this, &GameEngine::onClearScreen);
     _game->finishedEvent -= Poco::delegate(this, &GameEngine::onGameExit);
 
     delete _game;
@@ -24,9 +23,8 @@ GameEngine::~GameEngine() {
 
 
 int GameEngine::runGame(const std::string &gamePath) {
-    _game = new Game(gamePath, _screen);
+    _game = new Game(gamePath, &_screen);
     _game->updateScreenEvent += Poco::delegate(this, &GameEngine::onUpdateScreen);
-    _game->clearScreenEvent += Poco::delegate(this, &GameEngine::onClearScreen);
     _game->finishedEvent += Poco::delegate(this, &GameEngine::onGameExit);
 
 	Poco::ThreadPool::defaultPool().start(*_game);
@@ -43,13 +41,7 @@ void GameEngine::stopGame() {
 }
 
 void GameEngine::onUpdateScreen(const void *sender) {
-    ScreenArgs args;
-    args.screen = &_screen;
-    setScreenEvent.notifyAsync(this, args);
-}
-
-void GameEngine::onClearScreen(const void *sender) {
-    _screen.clear();
+    //std::cout << _screen.toString();
     ScreenArgs args;
     args.screen = &_screen;
     setScreenEvent.notifyAsync(this, args);
@@ -57,7 +49,6 @@ void GameEngine::onClearScreen(const void *sender) {
 
 void GameEngine::onGameExit(const void *sender) {
     _game->updateScreenEvent -= Poco::delegate(this, &GameEngine::onUpdateScreen);
-    _game->clearScreenEvent -= Poco::delegate(this, &GameEngine::onClearScreen);
     _game->finishedEvent -= Poco::delegate(this, &GameEngine::onGameExit);
 
     delete _game;

@@ -1,58 +1,55 @@
-local rotationTime = 5000
-local brightness = 255
-local saturation = 255
-local reverse = false
+local tools = require("lib.tools")
 
--- Check parameters
-rotationTime = math.max(100, rotationTime)
-brightness = math.max(0, math.min(brightness, 255))
-saturation = math.max(0, math.min(saturation, 255))
+local demo = {};
+
+demo.brightness = 255
+demo.saturation = 255
+demo.reverse = false
+demo.increment = 3
 
 -- Initialize the led data
-local screen = {}
-local ledCount = engine.screenWidth * engine.screenHeight
-for i = 1, ledCount do
-    local hue = (i-1) * 359 / ledCount
-    screen[i] = colors.hsv2rgb(hue, saturation, brightness)
+demo.screen = {}
+demo.ledCount = engine.screenWidth * engine.screenHeight
+for i = 1, demo.ledCount do
+    local hue = (i - 1) * 359 / demo.ledCount
+    demo.screen[i] = colors.hsv2rgb(hue, demo.saturation, demo.brightness)
 end
 
--- Calculate the sleep time and rotation increment
-local increment = 3
-local sleepTime = rotationTime / ledCount
-while sleepTime < 50 do
-    increment = increment * 2
-    sleepTime = sleepTime * 2
-end
-increment = increment % ledCount
 
-function printScreen()
-    view = {}
-    for i = 1, engine.screenHeight do
-        view[i] = {}
-        for j = 1, engine.screenWidth do
-            view[i][j] = screen[(i-1) * engine.screenWidth + engine.screenWidth]
+function demo.printScreen()
+    local view = {}
+    for x = 1, engine.screenWidth do
+        view[x] = {}
+        for y = 1, engine.screenHeight do
+            view[x][y] = demo.screen[(y - 1) * engine.screenWidth + engine.screenWidth]
         end
     end
     engine:setScreen(view)
 end
 
--- Start the write data loop
-while not engine:abort() do
-    printScreen();
-    local key = engine:getKey();
-    if key == "a" then
-        reverse = not reverse;
-    end
-    for i = 1, increment do
-        local removed
-        if reverse == true then
-            removed = table.remove(screen, 1)
-            table.insert(screen, removed)
-        else
-            removed = table.remove(screen)
-            table.insert(screen, 1, removed)
+function demo.run()
+    -- Start the write data loop
+    while not engine:abort() do
+        demo.printScreen();
+        local key = engine:getKey();
+        if key == "a" then
+            demo.reverse = not demo.reverse;
+        elseif key == "select" then
+            break
         end
+        for i = 1, demo.increment do
+            local removed
+            if demo.reverse == true then
+                removed = table.remove(demo.screen, 1)
+                table.insert(demo.screen, removed)
+            else
+                removed = table.remove(demo.screen)
+                table.insert(demo.screen, 1, removed)
+            end
+        end
+        engine:sleep(50)
     end
-    engine:sleep(sleepTime)
 end
+
+return demo
 

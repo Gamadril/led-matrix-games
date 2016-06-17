@@ -8,6 +8,8 @@
 
 #include "utils/DelegateArgs.h"
 
+#include <time.h>
+
 extern "C"
 {
 #include "lua.h"
@@ -17,7 +19,7 @@ extern "C"
 
 class Game : public Poco::Runnable {
 public:
-    Game(const std::string &script, Screen &screen);
+    Game(const std::string &script, Screen *screen);
 
     virtual ~Game();
 
@@ -31,17 +33,16 @@ public:
 
     void setScreen(lua_State *state);
 
-    void clearScreen();
-
     bool shouldFinish();
 
     std::string getKey();
 
     void setPressedKey(std::string &key);
 
+    long timeElapsed();
+
     Poco::BasicEvent<void> finishedEvent;
     Poco::BasicEvent<void> updateScreenEvent;
-    Poco::BasicEvent<void> clearScreenEvent;
 
 private:
     void setArgumentsToLua(const Poco::Dynamic::Var &obj, lua_State *state);
@@ -51,7 +52,9 @@ private:
 
     bool _abortRequested;
 
-    Screen _screen;
+    Screen *_screen;
 
     std::string _key;
+
+    struct timespec _start;
 };

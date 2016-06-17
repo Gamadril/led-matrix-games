@@ -33,9 +33,12 @@ void TcpSocketDevice::close() {
 
 int TcpSocketDevice::writeBytes(const unsigned size, const uint8_t *data) {
     static int errorCounter = 0;
+    int bytesSent = 0;
 
     try {
-        _socket->sendBytes(data, size);
+        while (bytesSent < size) {
+            bytesSent += _socket->sendBytes(data + bytesSent, size - bytesSent);
+        }
         errorCounter = 0;
     } catch (const std::exception &e) {
         if (errorCounter < 3) {

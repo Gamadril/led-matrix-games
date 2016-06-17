@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "Poco/Timestamp.h"
+#include "Poco/Path.h"
 
 #include "Game.h"
 #include "utils/HsvTransform.h"
@@ -21,12 +22,6 @@ namespace {
         return 0;
     }
 
-    static int lua_clearScreen(lua_State *state) {
-        Game **game = static_cast<Game **>(luaL_checkudata(state, 1, "GameMT"));
-        (*game)->clearScreen();
-        return 0;
-    }
-
     static int lua_abort(lua_State *state) {
         Game **game = static_cast<Game **>(luaL_checkudata(state, 1, "GameMT"));
         bool toAbort = (*game)->shouldFinish();
@@ -38,6 +33,13 @@ namespace {
         Game **game = static_cast<Game **>(luaL_checkudata(state, 1, "GameMT"));
         std::string key = (*game)->getKey();
         lua_pushstring(state, key.c_str());
+        return 1;
+    }
+
+    static int lua_getTime(lua_State *state) {
+        Game **game = static_cast<Game **>(luaL_checkudata(state, 1, "GameMT"));
+        long time = (*game)->timeElapsed();
+        lua_pushinteger(state, time);
         return 1;
     }
 
@@ -105,41 +107,48 @@ namespace {
         return 1;
     }
 
+    void stackdump_g(lua_State *l) {
+        int i;
+        int top = lua_gettop(l);
 
+        printf("total in stack %d\n", top);
 
-
-void stackdump_g(lua_State* l)
-{
-    int i;
-    int top = lua_gettop(l);
-
-    printf("total in stack %d\n",top);
-
-    for (i = 1; i <= top; i++)
-    {
-        int t = lua_type(l, i);
-        switch (t) {
-            case LUA_TSTRING:  
-                printf("string: '%s'\n", lua_tostring(l, i));
-                break;
-            case LUA_TBOOLEAN:  
-                printf("boolean %s\n",lua_toboolean(l, i) ? "true" : "false");
-                break;
-            case LUA_TNUMBER:  
-                printf("number: %g\n", lua_tonumber(l, i));
-                break;
-            default:  
-                printf("%s\n", lua_typename(l, t));
-                break;
+        for (i = 1; i <= top; i++) {
+            int t = lua_type(l, i);
+            switch (t) {
+                case LUA_TSTRING:
+                    printf("string: '%s'\n", lua_tostring(l, i));
+                    break;
+                case LUA_TBOOLEAN:
+                    printf("boolean %s\n", lua_toboolean(l, i) ? "true" : "false");
+                    break;
+                case LUA_TNUMBER:
+                    printf("number: %g\n", lua_tonumber(l, i));
+                    break;
+                default:
+                    printf("%s\n", lua_typename(l, t));
+                    break;
+            }
+            printf("  ");
         }
-        printf("  "); 
+        printf("\n");
     }
-    printf("\n"); 
+
+    void setLuaPath(lua_State *state, std::string path) {
+        lua_getglobal(state, "package");
+        lua_getfield(state, -1, "path"); // get field "path" from table at top of stack (-1)
+        std::string cur_path = lua_tostring(state, -1); // grab path string from top of stack
+        cur_path.append(";"); // do your path magic here
+        cur_path.append(path);
+        cur_path.append("?.lua");
+        lua_pop(state, 1); // get rid of the string on the stack we just pushed on line 5
+        lua_pushstring(state, cur_path.c_str()); // push the new one
+        lua_setfield(state, -2, "path"); // set the field "path" in table at -2 with value at top of stack
+        lua_pop(state, 1); // get rid of package table from top of stack
+    }
 }
 
-}
-
-Game::Game(const std::string &script, Screen &screen) :
+Game::Game(const std::string &script, Screen *screen) :
         _script(script),
         _abortRequested(false),
         _screen(screen),
@@ -181,7 +190,7 @@ void Game::setPoint(lua_State *state) {
         //lua_pop(state, 1);
         //lua_pop(state, 1);
 
-        _screen.set(x, y, color);
+        _screen->set(x, y, color);
         updateScreenEvent.notify(this);
     }
 }
@@ -198,22 +207,21 @@ void Game::setScreen(lua_State *state) {
         unsigned count = (unsigned) luaL_checkinteger(state, -1);
         lua_pop(state, 1);
 
-        if (count == unsigned(_screen.height)) {
+        if (count == unsigned(_screen->width)) {
             uint32_t x, y;
             ColorRgb color;
-            for (unsigned i = 0; i < _screen.height; i++) {
+            for (unsigned i = 0; i < _screen->width; i++) {
                 lua_rawgeti(state, -1, i + 1);
 
                 lua_len(state, -1);
                 count = (unsigned) luaL_checkinteger(state, -1);
                 lua_pop(state, 1);
 
-                if (count == unsigned(_screen.width)) {
-                    for(unsigned j = 0; j < _screen.width; j++) {
+                if (count == unsigned(_screen->height)) {
+                    for (unsigned j = 0; j < _screen->height; j++) {
                         lua_rawgeti(state, -1, j + 1);
 
-                        if (!lua_istable(state, -1))
-                        {
+                        if (!lua_istable(state, -1)) {
                             std::cerr << "[Game] screen dots does not contain color information" << std::endl;
                             break;
                         }
@@ -230,11 +238,11 @@ void Game::setScreen(lua_State *state) {
                         lua_pop(state, 1);
 
                         lua_pop(state, 1);
-                        _screen.set(j, i, color);
+                        _screen->set(i, j, color);
                     }
                 }
                 else {
-                    std::cerr << "[Effect] screen size does not match size of received table" << std::endl;
+                    std::cerr << "[Game] screen size does not match size of received table" << std::endl;
                 }
                 lua_pop(state, 1);
             }
@@ -242,7 +250,7 @@ void Game::setScreen(lua_State *state) {
             updateScreenEvent.notifyAsync(this);
         }
         else {
-            std::cerr << "[Effect] screen size does not match size of received table" << std::endl;
+            std::cerr << "[Game] screen size does not match size of received table" << std::endl;
         }
     }
 }
@@ -252,6 +260,10 @@ void Game::run() {
     lua_State *L = luaL_newstate();
     luaL_openlibs(L);
 
+    Poco::Path path(_script);
+    path.makeParent();
+    setLuaPath(L, path.toString());
+
     luaL_newmetatable(L, "GameMT");
     lua_pushvalue(L, -1);
     lua_setfield(L, -2, "__index");
@@ -259,19 +271,19 @@ void Game::run() {
     lua_setfield(L, -2, "setPoint");
     lua_pushcfunction(L, lua_setScreen);
     lua_setfield(L, -2, "setScreen");
-    lua_pushcfunction(L, lua_clearScreen);
-    lua_setfield(L, -2, "clearScreen");
     lua_pushcfunction(L, lua_abort);
     lua_setfield(L, -2, "abort");
     lua_pushcfunction(L, lua_sleep);
     lua_setfield(L, -2, "sleep");
     lua_pushcfunction(L, lua_getKey);
     lua_setfield(L, -2, "getKey");
+    lua_pushcfunction(L, lua_getTime);
+    lua_setfield(L, -2, "time");
 
     // screen dimensions
-    lua_pushinteger(L, _screen.width);
+    lua_pushinteger(L, _screen->width);
     lua_setfield(L, -2, "screenWidth");
-    lua_pushinteger(L, _screen.height);
+    lua_pushinteger(L, _screen->height);
     lua_setfield(L, -2, "screenHeight");
 
     Game **ud = static_cast<Game **>(lua_newuserdata(L, sizeof(Game *)));
@@ -288,6 +300,9 @@ void Game::run() {
     lua_setglobal(L, "colors");
 
     lua_settop(L, 0); //empty the lua stack
+
+    timespec_get(&_start, TIME_UTC);
+
     if (luaL_dofile(L, _script.c_str())) {
         fprintf(stderr, "error: %s\n", lua_tostring(L, -1));
         lua_pop(L, 1);
@@ -297,10 +312,6 @@ void Game::run() {
     lua_close(L);
 
     finishedEvent.notifyAsync(this);
-}
-
-void Game::clearScreen() {
-    clearScreenEvent.notifyAsync(this);
 }
 
 bool Game::isAbortRequested() const {
@@ -354,9 +365,16 @@ void Game::setArgumentsToLua(const Poco::Dynamic::Var &obj, lua_State *state) {
     else if (obj.isArray()) {
         lua_newtable(state);
         for (unsigned i = 0; i < obj.size(); i++) {
-            lua_pushinteger(state, i + 1); // lua's index starts at 1
+            lua_pushinteger(state, i + 1);
             setArgumentsToLua(obj[i], state);
             lua_settable(state, -3);
         }
     }
+}
+
+long Game::timeElapsed() {
+    struct timespec now;
+    timespec_get(&now, TIME_UTC);
+    long time = (now.tv_nsec - _start.tv_nsec)/1000000L + (now.tv_sec - _start.tv_sec)*1000L;
+    return time;
 }

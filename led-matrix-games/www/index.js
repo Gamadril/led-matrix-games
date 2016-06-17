@@ -56,6 +56,10 @@ function updateButtons() {
     // - button
     buttons[7].style.right = '0';
     buttons[7].style.bottom = '0';
+
+    // select button
+    buttons[8].style.right = '0';
+    buttons[8].style.top = '0';
 }
 
 function vibrate() {
@@ -134,6 +138,9 @@ document.addEventListener('keydown', function (e) {
             break;
         case 66: // b
             button = 'b';
+            break;
+        case 83: // s
+            button = 'select';
             break;
         default:
             return; // exit this handler for other keys
