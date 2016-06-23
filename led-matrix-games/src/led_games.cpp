@@ -60,9 +60,19 @@ protected:
         else {
             Poco::Util::AbstractConfiguration *view;
             Poco::Util::AbstractConfiguration::Keys keys;
+            std::string iniPath = "/boot/led_games.ini";
+            Poco::File file(iniPath);
+            Poco::Util::AbstractConfiguration *_config;
+
+            if (file.exists()) {
+                _config = new Poco::Util::IniFileConfiguration(iniPath);
+            } else {
+                Poco::Util::AbstractConfiguration &appconfig = config();
+                _config = &appconfig;
+            }
 
             // create LED output device
-            view = config().createView("device");
+            view = _config->createView("device");
             view->keys(keys);
             Poco::DynamicStruct ledConfig;
             for (auto key : keys) {
@@ -76,7 +86,7 @@ protected:
             std::cout << "Led device " << view->getString("type") << " created" << std::endl;
 
             // get generic settings
-            view = config().createView("settings");
+            view = _config->createView("settings");
             uint8_t brightness = (uint8_t) view->getUInt("brightness", 40);
             if (brightness > 100) {
                 brightness = 100;
@@ -86,7 +96,7 @@ protected:
             _ledDevice->setBrightness(brightness);
 
             // Create game engine
-            view = config().createView("games");
+            view = _config->createView("games");
             _engine = new GameEngine(screenWidth, screenHeight);
             _engine->setScreenEvent += Poco::delegate(this, &LedGamesService::onNewScreen);
             std::string gamePath = view->getString("path", "games") + Poco::Path::separator() + view->getString("start", "menu") + ".lua";
@@ -99,14 +109,14 @@ protected:
             std::cout << "Game engine created and started with " << gamePath << std::endl;
 
             // Create control server
-            view = config().createView("server");
+            view = _config->createView("server");
             uint16_t port = (uint16_t) view->getUInt("port", 37890);
             _controlServer = new ControlServer(port);
             _controlServer->controlEvent += Poco::delegate(this, &LedGamesService::onControl);
             std::cout << "Control server created and started on port " << _controlServer->getPort() << std::endl;
 
             // Create joystick listener
-            view = config().createView("gamepad");
+            view = _config->createView("gamepad");
             std::string device = view->getString("device", "/dev/input/js0");
             _gamepad = new Gamepad(device);
             _gamepad->controlEvent += Poco::delegate(this, &LedGamesService::onControl);

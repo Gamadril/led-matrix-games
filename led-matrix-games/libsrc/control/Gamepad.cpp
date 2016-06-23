@@ -71,6 +71,8 @@ void Gamepad::run() {
                             args.key = "bright_minus";
                         } else if (jse.number == 5) {
                             args.key = "bright_plus";
+                        } else if (jse.number == 6) {
+                            args.key = "select";
                         } else {
                             if (jse.number % 2 == 0) {
                                 args.key = "a";
