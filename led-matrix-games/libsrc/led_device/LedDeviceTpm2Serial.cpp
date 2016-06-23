@@ -33,17 +33,15 @@ int LedDeviceTpm2Serial::write(const Screen &screen) {
     ColorRgb color;
     uint32_t index = 0;
     Pixel pos;
-    for (int y = 0; y < screen.height; y++) {
-        for (int x = 0; x < screen.width; x++) {
-            pos = _leds[y * screen.width + x];
-            color = screen.get(pos.X, pos.Y);
-            color.applyBrightness(_brightness);
+    for (int i = 0; i < screen.width * screen.height; i++) {
+        pos = _leds[i];
+        color = screen.get(pos.X, pos.Y);
+        color.applyBrightness(_brightness);
 
-            _ledBuffer[4 + index + rOffset] = color.red;
-            _ledBuffer[4 + index + gOffset] = color.green;
-            _ledBuffer[4 + index + bOffset] = color.blue;
-            index += 3;
-        }
+        _ledBuffer[4 + index + rOffset] = color.red;
+        _ledBuffer[4 + index + gOffset] = color.green;
+        _ledBuffer[4 + index + bOffset] = color.blue;
+        index += 3;
     }
     return writeBytes((const uint32_t) _ledBuffer.size(), _ledBuffer.data());
 }

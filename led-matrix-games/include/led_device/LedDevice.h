@@ -3,8 +3,8 @@
 #include "utils/Screen.h"
 
 struct Pixel {
-    uint8_t X;
-    uint8_t Y;
+    uint16_t X;
+    uint16_t Y;
 };
 
 enum DeviceColorOrder {
@@ -35,9 +35,7 @@ class LedDevice {
 public:
     LedDevice();
 
-    virtual ~LedDevice() {
-        // empty
-    }
+    virtual ~LedDevice();
 
     virtual int write(const Screen &ledValues) = 0;
 
@@ -59,6 +57,9 @@ public:
 
 protected:
     void initLeds(uint8_t width, uint8_t height);
+
+private:
+    void flip(bool vertical, bool horizontal, const uint16_t &width, const uint16_t &height);
 
 protected:
     uint8_t _brightness;

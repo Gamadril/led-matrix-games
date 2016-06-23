@@ -89,7 +89,7 @@ protected:
             view = config().createView("games");
             _engine = new GameEngine(screenWidth, screenHeight);
             _engine->setScreenEvent += Poco::delegate(this, &LedGamesService::onNewScreen);
-            std::string gamePath = view->getString("path", "games") + Poco::Path::separator() + view->getString("start", "demo") + ".lua";
+            std::string gamePath = view->getString("path", "games") + Poco::Path::separator() + view->getString("start", "menu") + ".lua";
             Poco::File gameFile(gamePath);
             if (!gameFile.exists()) {
                 std::cerr << "Unable to find game file: " << gamePath << std::endl;
