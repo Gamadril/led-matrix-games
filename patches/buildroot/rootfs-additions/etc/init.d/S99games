@@ -6,6 +6,10 @@ if [ -d "/led-matrix-games/games" ]; then
 	mv /led-matrix-games/games /boot/
 fi
 
+if [ -f "/led-matrix-games/led_games.ini" ]; then
+	mv /led-matrix-games/led_games.ini /boot/
+fi
+
 case "$1" in
         start)
                 echo -n "Starting games server: "
