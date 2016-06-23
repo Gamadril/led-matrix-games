@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 
-  <head>
+<head>
     <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <meta name="description" content="Led-matrix-games : RPi system for playing games on a LED matrix as display">
@@ -9,67 +9,57 @@
     <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
 
     <title>Led-matrix-games</title>
-  </head>
+</head>
 
-  <body>
+<body>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/Gamadril/led-matrix-games">View on GitHub</a>
+<!-- HEADER -->
+<div id="header_wrap" class="outer">
+    <header class="inner">
+        <a id="forkme_banner" href="https://github.com/Gamadril/led-matrix-games">View on GitHub</a>
 
-          <h1 id="project_title">Led-matrix-games</h1>
-          <h2 id="project_tagline">RPi system for playing games on a LED matrix as display</h2>
+        <h1 id="project_title">Led-matrix-games</h1>
+        <h2 id="project_tagline">RPi system for playing games on a LED matrix as display</h2>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/Gamadril/led-matrix-games/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/Gamadril/led-matrix-games/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
+        <section id="downloads">
 
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
+            <a class="zip_download_link" href="https://raw.githubusercontent.com/Gamadril/led-matrix-games/gh-pages/downloads/rpi_sdcard.img">Download sd card image fro RPi</a>
+        </section>
+    </header>
+</div>
+
+<!-- MAIN CONTENT -->
+<div id="main_content_wrap" class="outer">
+    <section id="main_content" class="inner">
         <h1>
-<a id="led-matrix-games" class="anchor" href="#led-matrix-games" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>led-matrix-games</h1>
+            <a id="led-matrix-games" class="anchor" href="#led-matrix-games" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>led-matrix-games</h1>
 
-<h1></h1>
+        <h1></h1>
 
-<p>led-matrix-games is a RPi based system running simple games using a led matrix as display. See for details: <a href="http://www.ledswork.de/wp/2015/09/27/tetris-display-mit-handy-steuerung/">Tetris display</a>(in German)</p>
+        <p>led-matrix-games is a RPi based system running simple games using a led matrix as display. See for details: <a href="http://www.ledswork.de/wp/2015/09/27/tetris-display-mit-handy-steuerung/">Tetris display</a>(in German)</p>
 
-<p>The repository contains a build script which will download buildroot and compile the linux system for the Raspberry Pi including the toolchain for crosscompiling the sofware (led-matrix-games folder). The "engine" includes the runtime for the games written in LUA and LED controlling interface. Currently it uses tpm2 protocol and serial device for driving ws2812 based led matrix (16x32). There is also a tpm2net device support which was used for development.
-After the start the RPi acts as a WiFi access point providing the open "GAMES" network. After connecting to the network open 192.168.0.1 in the browser to get a "virtual gamepad" to play the game.
-Currently the build script compiles an own hostapd version to support rtl8188eu based cards (tested with TL-WN725N). For other cards the build script and hostapd configuration have to be modified. Gamepad/Joystick support was added, but tested only with the XBox 360 USB controller.</p>
+        <p>The github repository contains a build script which will download buildroot and compile the linux system for the Raspberry Pi including the toolchain for crosscompiling the sofware (led-matrix-games folder). The "engine" includes the runtime for the games written in LUA and LED controlling interface. Currently it uses tpm2 protocol and serial device for driving ws2812 based led matrix (16x32).
+            After the start the RPi acts as a WiFi access point providing the open "GAMES" network. After connecting to the network open 192.168.0.1 in the browser to get a "virtual gamepad" to play the game.
+            Currently the build script compiles an own hostapd version to support rtl8188eu based cards (tested with TL-WN725N). For other cards the build script and hostapd configuration have to be modified. Gamepad/Joystick support was added, but tested only with the XBox 360 USB controller.</p>
 
-<p>The output of the build.sh script is a sdcard image (sdcard.img) which can be flashed to sd card using the usual ways.
-For linux use <code>dd if=./sdcard.img of=/dev/sdX</code> - replace sdX with the sd card reader device recognized by the system.</p>
+        <p>The output of the build.sh script is a sdcard image (sdcard.img) which can be flashed to sd card using the usual ways.</p>
+        <p>A precompiled image can be downloaded from here (button on the top)</p>
+        <p>You can use common tools for writing a sd card image. On linux use <code>dd if=./sdcard.img of=/dev/sdX</code> - replace sdX with the sd card reader device recognized by the system.</p>
 
-<h2>
-<a id="3rd-party-components" class="anchor" href="#3rd-party-components" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>3rd party components</h2>
+        <h2>
+            <a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
 
-<p>Poco library: <a href="https://github.com/pocoproject/poco">https://github.com/pocoproject/poco</a></p>
+        <p>MIT license, see <a href="./LICENSE">LICENSE</a></p>
+    </section>
+</div>
 
-<p>Serial library: <a href="https://github.com/wjwwood/serial">https://github.com/wjwwood/serial</a></p>
-
-<p>Lua: <a href="http://www.lua.org/">http://www.lua.org/</a></p>
-
-<h2>
-<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
-
-<p>MIT license, see <a href="./LICENSE">LICENSE</a></p>
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
+<!-- FOOTER  -->
+<div id="footer_wrap" class="outer">
+    <footer class="inner">
         <p class="copyright">Led-matrix-games maintained by <a href="https://github.com/Gamadril">Gamadril</a></p>
         <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
+    </footer>
+</div>
 
-    
-
-  </body>
+</body>
 </html>
