@@ -21,3 +21,6 @@ cp ../patches/buildroot/.config ./$BUILDROOT_FILE/
 cd $BUILDROOT_FILE
 echo "Building image"
 make
+
+cp build/$BUILDROOT_FILE/output/images/sdcard.img ./
+
